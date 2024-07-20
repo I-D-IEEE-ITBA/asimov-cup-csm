@@ -32,6 +32,7 @@
 #define DIN     10          //pin digital
 #define CS      11          //pin digital
 #define CLK     12          //pin digital
+#define N_DISP  1
 
 //-------------------Buttons
 #define BUTTON_Y  18          //pin digital 18  A4

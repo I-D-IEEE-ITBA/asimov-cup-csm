@@ -1,6 +1,7 @@
 #include "LedControl.h"
+#include "board.h"
 
-LedControl display8digits = LedControl(12, 10, 11, 1); //Din = 12, Clck = 10, CS = 11, Number of devices = 1
+LedControl display8digits = LedControl(DIN, CLK, CS, N_DISP); //Din = 12, Clck = 10, CS = 11, Number of devices = 1
 //MAX7219 display8digits;
 #define TRUE 1
 #define FALSE 0
@@ -10,15 +11,18 @@ LedControl display8digits = LedControl(12, 10, 11, 1); //Din = 12, Clck = 10, CS
 
 //CONEXIONES IMPORTANTES: para el display, para Arduino Uno: VCC a +5V, GND a GND, DIN a pin 12, CS a pin 11, CLK a pin 10
 
-const int buttonY   = 2; //boton amarillo
-const int buttonR   = 3; //boton rojo arranca el cronometro de la pelea
-const int led1_2    = 4; //luces que se prenden en secuencia al inicio.
-const int led3      = 5; //conectar, del modulo del transistor: hembra marron a gnd, hembra rojo a 5v arduino (ver esquematico,
-const int led4      = 6; //muesquita para arriba). Despues, pin 1 modulo transistores a 2 leds, pin 2 a 1 led, pin 3 a 1 led,
-const int led5_6    = 7; //pin 4 a 2 leds, pin 5 a 2 leds, pin 6 a 1 led.
-const int led7_8    = 8;
-const int led9      = 9;
-const int buzzer  = 13; //buzzer
+const int buttonY   = BUTTON_Y; //boton amarillo
+const int buttonR   = BUTTON_R; //boton rojo arranca el cronometro de la pelea
+const int led1      = LED1; //luces que se prenden en secuencia al inicio.
+const int led2      = LED2; //luces que se prenden en secuencia al inicio.
+const int led3      = LED3; //conectar, del modulo del transistor: hembra marron a gnd, hembra rojo a 5v arduino (ver esquematico,
+const int led4      = LED4; //muesquita para arriba). Despues, pin 1 modulo transistores a 2 leds, pin 2 a 1 led, pin 3 a 1 led,
+const int led5      = LED5; //pin 4 a 2 leds, pin 5 a 2 leds, pin 6 a 1 led.
+const int led6      = LED6; //luces que se prenden en secuencia al inicio.
+const int led7      = LED7;
+const int led8      = LED8; //luces que se prenden en secuencia al inicio.
+const int led9      = LED9;
+const int buzzer    = BUZZER; //buzzer
 
 int buttonRState = 0;
 int buttonRPrevState = 0;
@@ -64,14 +68,15 @@ void setup() {
   pinMode(buttonR, INPUT); //botones: activo bajo (presionado: 0)
   pinMode(buttonY, INPUT);
   pinMode(buzzer,OUTPUT); //buzzer y leds: activo alto (se prenden/activan con un 1)
-  pinMode(led1_2,OUTPUT);
+  pinMode(led1,OUTPUT);
+  pinMode(led2,OUTPUT);
   pinMode(led3,OUTPUT);
   pinMode(led4,OUTPUT);
-  pinMode(led5_6,OUTPUT);
-  pinMode(led7_8,OUTPUT);
+  pinMode(led5,OUTPUT);
+  pinMode(led6,OUTPUT);
+  pinMode(led7,OUTPUT);
+  pinMode(led8,OUTPUT);
   pinMode(led9,OUTPUT);
-
-
 
   //Serial.begin(9600); //creo que hace falta porque se comunica por spi con el modulo de displays
 }
@@ -82,7 +87,6 @@ void setup() {
 void loop() {
   timeNow = millis();
   //------------------lectura de botones cada 50ms----------------------------//
-  
   if (timeNow-timePrev>50) //leer botones cada 50 milisegs para evitar rebotes.
   {
     timePrev=timeNow;
@@ -266,26 +270,46 @@ void irPrendiendoLeds(unsigned long timer1Init)
   //finCompetencia())
   unsigned long timer1Seg = (millis()-timer1Init)/1000;
   if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*8/9){
-    digitalWrite(led7_8, HIGH);
-  } else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*6/9){
-    digitalWrite(led5_6, HIGH);
-  } else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*4/9){
-    digitalWrite(led3, HIGH);
-    digitalWrite(led4, HIGH);
-  } else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*2/9){
-    digitalWrite(led1_2, HIGH);
+    digitalWrite(led8, HIGH);
+  }
+  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*7/9){
+    digitalWrite(led7, HIGH);
   } 
+  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*6/9){
+    digitalWrite(led6, HIGH);
+  } 
+  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*5/9){
+    digitalWrite(led5, HIGH);
+  } 
+  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*4/9){
+    digitalWrite(led4, HIGH);
+  } 
+  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*3/9){
+    digitalWrite(led3, HIGH);
+  } 
+  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*2/9){
+    digitalWrite(led2, HIGH);
+  } 
+  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*1/9){
+    digitalWrite(led1, HIGH);
+  } 
+
+
+
 }
 
 //---------------------------------------------------------------------//
 
 void ledsReset(void)
 {
-  digitalWrite(led1_2, LOW);
+  digitalWrite(led1, LOW);
+  digitalWrite(led2, LOW);
   digitalWrite(led3, LOW);
   digitalWrite(led4, LOW);
-  digitalWrite(led5_6, LOW);
-  digitalWrite(led7_8, LOW);
+  digitalWrite(led5, LOW);
+  digitalWrite(led6, LOW);
+  digitalWrite(led7, LOW);
+  digitalWrite(led8, LOW);
   digitalWrite(led9, LOW);
 }
 
@@ -294,7 +318,8 @@ void ledsReset(void)
 void readySetGo(void)
 {
       tone(buzzer,785); //primer beep, se prenden 3 leds
-      digitalWrite(led1_2, HIGH);
+      digitalWrite(led1, HIGH);
+      digitalWrite(led2, HIGH);
       digitalWrite(led3, HIGH);
       delay (500);
       noTone(buzzer);
@@ -302,24 +327,21 @@ void readySetGo(void)
       
       tone(buzzer,785); //segundo beep, se prenden otros 3 leds
       digitalWrite(led4, HIGH);
-      digitalWrite(led5_6, HIGH);
+      digitalWrite(led5, HIGH);
+      digitalWrite(led6, HIGH);
       delay (500);
       noTone(buzzer);
       delay(500);
       
       tone(buzzer,785); //tercer beep, se prenden ultimos 3 leds
-      digitalWrite(led7_8, HIGH);
+      digitalWrite(led7, HIGH);
+      digitalWrite(led8, HIGH);
       digitalWrite(led9, HIGH);
       delay (500);
       noTone(buzzer);
       delay(1000);
       
-      digitalWrite(led1_2, LOW);
-      digitalWrite(led3, LOW);
-      digitalWrite(led4, LOW);
-      digitalWrite(led5_6, LOW);
-      digitalWrite(led7_8, LOW);
-      digitalWrite(led9, LOW);
+      ledsReset();
       tone(buzzer,1570); //cuarto beep, mas largo, se apagan todos los leds
 }
 
@@ -328,21 +350,19 @@ void readySetGo(void)
 void finCompetencia(void)
 {
   tone(buzzer,1570);
-  digitalWrite(led1_2, HIGH);
+  digitalWrite(led1, HIGH);
+  digitalWrite(led2, HIGH);
   digitalWrite(led3, HIGH);
   digitalWrite(led4, HIGH);
-  digitalWrite(led5_6, HIGH);
-  digitalWrite(led7_8, HIGH);
+  digitalWrite(led5, HIGH);
+  digitalWrite(led6, HIGH);
+  digitalWrite(led7, HIGH);
+  digitalWrite(led8, HIGH);
   digitalWrite(led9, HIGH);
   delay (1000);
   noTone(buzzer);
   delay(3000);
-  digitalWrite(led1_2, LOW);
-  digitalWrite(led3, LOW);
-  digitalWrite(led4, LOW);
-  digitalWrite(led5_6, LOW);
-  digitalWrite(led7_8, LOW);
-  digitalWrite(led9, LOW);
+  ledsReset();
 }
 
 char toChar(int num)

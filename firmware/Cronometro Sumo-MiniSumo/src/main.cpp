@@ -87,8 +87,8 @@ void setup() {
 void loop() {
   timeNow = millis();
   //------------------lectura de botones cada 50ms----------------------------//
-  if (timeNow-timePrev>50) //leer botones cada 50 milisegs para evitar rebotes.
-  {
+  	if (timeNow-timePrev>50) //leer botones cada 50 milisegs para evitar rebotes.
+  	{
     timePrev=timeNow;
     buttonRPrevState = buttonRState;
     buttonYPrevState = buttonYState;
@@ -106,6 +106,7 @@ void loop() {
   
 
   //----------------------------estado 0--------------------------------------//
+  //----------------------------estado de reposo-sin comenzar--------------------------------------//
   if (estado1==0) //presionar boton rojo para comenzar
   {
     writeTimerReset(1); //imprime ceros en el primer timer.
@@ -113,23 +114,38 @@ void loop() {
     ledsReset(); //apaga los 9 leds.
     estado2=0; //timer 2 en estado 'presionar boton amarillo para comenzar' (solo puede comenazar cuando estado1=1, 'contando').
     buttonYPressed = 0;
+   
+   
     if (buttonRPressed) //boton rojo presionado
+	//----------------------------comenzar--------------------------------------//
     {
       buttonRPressed = 0;
       readySetGo(); //hace 3 beeps cortos y 1 largo, y prende los leds de a 3.
       estado1=1; //pasa a 'contando'
       timer1Init = millis();
     }
+	//Elegir Apoyaron-Iniciar
+	//se ejecuta una 
+//----------|----------|
+
+
   }
 
   //----------------------------estado 1--------------------------------------//
+//----------------------------En pelea--------------------------------------//
+
   else if (estado1==1) //timer 1: contando
   {
-    writeTimer1(timer1Init); //imprime tiempo de pelea
-    irPrendiendoLeds(timer1Init); //prende leds a medida que pasa el tiempo de pelea.
 
+    writeTimer1(timer1Init); //imprime tiempo de pelea
+
+    //irPrendiendoLeds(timer1Init); //prende leds a medida que pasa el tiempo de pelea.
+	//semaforo 
+
+	//Pelea - robots enganchados - 
     //Logica del boton 2 y timer 2
     if (estado2==0){ //presionar boton amarillo para comenzar
+	//No enganchados
       writeTimerReset(2);
       if (buttonYPressed) //boton amarillo presionado
       {
@@ -140,19 +156,26 @@ void loop() {
     }
     else if (estado2==1) //timer 2: contando
     {
+	//enganchados
       writeTimer2(timer2Init);
       if (buttonYPressed) //boton amarillo presionado
       {
+		//Desenganchas - sigue normal
         buttonYPressed = 0;
         estado2=0; //vuelve a 'presionar para comenzar'
       }
       else if ((millis()-timer2Init)/1000 >= TIEMPO_INFRACCION_SEGS) //pasaron mas de 15 seg
       {
+		//Infraccion 15 segundos
         writeTimer2(timer2Init); //para que imprima el 15, y no un posible 14.99
         estado1=2; //pasa a 'pausado'
-        finCompetencia(); //beep y prende luces por 4 seg.
+        
+		//Reanudar 
+		//con apoyaron o iniciar
       }
     }
+
+	//Uno gano el combate
     if (buttonRPressed) //boton rojo presionado
     {
       buttonRPressed = 0;
@@ -161,6 +184,7 @@ void loop() {
     }
     else if ((millis()-timer1Init)/1000 >= TIEMPO_COMPETENCIA_SEGS) //pasaron mas de 3 min
     {
+		//Mas de 3min
       writeTimer1(timer1Init);
       estado1=2; //pasa a 'pausado'
       finCompetencia(); //beep y prende luces por 4 seg.
@@ -264,6 +288,7 @@ void writeTimerReset(int timer_id)
 
 //---------------------------------------------------------------------//
 
+//Algo Visual (agregado)
 void irPrendiendoLeds(unsigned long timer1Init)
 { //para un tiempo de 180 segs de competencia, prende un par de leds
   //cada 40 segs, de izquierda a derecha. (El ultimo led se prende con
@@ -302,6 +327,8 @@ void irPrendiendoLeds(unsigned long timer1Init)
 
 void ledsReset(void)
 {
+
+	//Apagar matrices
   digitalWrite(led1, LOW);
   digitalWrite(led2, LOW);
   digitalWrite(led3, LOW);
@@ -314,10 +341,26 @@ void ledsReset(void)
 }
 
 //---------------------------------------------------------------------//
+/*Apoyaron
+30segundos
++
+Iniciar 
+*/
 
+//Iniciar
 void readySetGo(void)
 {
-      tone(buzzer,785); //primer beep, se prenden 3 leds
+	//Secuencia de Inicar
+      //tone
+	  //
+	  //
+	  
+	  //prenderMatrizVerde()
+
+
+/*
+
+	  tone(buzzer,785); //primer beep, se prenden 3 leds
       digitalWrite(led1, HIGH);
       digitalWrite(led2, HIGH);
       digitalWrite(led3, HIGH);
@@ -343,6 +386,8 @@ void readySetGo(void)
       
       ledsReset();
       tone(buzzer,1570); //cuarto beep, mas largo, se apagan todos los leds
+	  */
+
 }
 
 //---------------------------------------------------------------------//

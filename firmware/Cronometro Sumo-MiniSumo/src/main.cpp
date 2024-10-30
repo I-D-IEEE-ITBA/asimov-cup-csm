@@ -106,7 +106,7 @@ void loop() {
   
 
   //----------------------------estado 0--------------------------------------//
-  //----------------------------estado de reposo-sin comenzar--------------------------------------//
+  //-------------------estado de reposo-sin comenzar--------------------------//
   if (estado1==0) //presionar boton rojo para comenzar
   {
     writeTimerReset(1); //imprime ceros en el primer timer.
@@ -120,6 +120,7 @@ void loop() {
 	//----------------------------comenzar--------------------------------------//
     {
       buttonRPressed = 0;
+      //Aca abajo iria el reemplazo por la nueva funcion de matriz iniciar
       readySetGo(); //hace 3 beeps cortos y 1 largo, y prende los leds de a 3.
       estado1=1; //pasa a 'contando'
       timer1Init = millis();
@@ -172,6 +173,8 @@ void loop() {
         
 		//Reanudar 
 		//con apoyaron o iniciar
+    //Cuando se reanuda debe hacer la secuencia de semaforo nuevamente mas los 
+    //5 segundos con las luces verdes encendidas
       }
     }
 
@@ -328,7 +331,13 @@ void irPrendiendoLeds(unsigned long timer1Init)
 void ledsReset(void)
 {
 
-	//Apagar matrices
+//Secuencia de apagado de matrices, codigo rgb(0,0,0)
+//Apagar matrices
+//apagarMatrizroja();
+//apagarMatrizAmarilla();
+//apagarMatrizVerde();
+
+  /*
   digitalWrite(led1, LOW);
   digitalWrite(led2, LOW);
   digitalWrite(led3, LOW);
@@ -338,6 +347,7 @@ void ledsReset(void)
   digitalWrite(led7, LOW);
   digitalWrite(led8, LOW);
   digitalWrite(led9, LOW);
+  */
 }
 
 //---------------------------------------------------------------------//
@@ -350,16 +360,18 @@ Iniciar
 //Iniciar
 void readySetGo(void)
 {
-	//Secuencia de Inicar
-      //tone
-	  //
-	  //
-	  
-	  //prenderMatrizVerde()
+	//Secuencia de Iniciar
+    //tone(buzzer, );
+	  //prenderMatrizRoja();
+    //delay(500);
+	  //prenderMatrizAmarilla();
+    //delay(500);
+	  //prenderMatrizVerde();
+    //delay(5000); 
+    //tone(buzzer, );
 
 
 /*
-
 	  tone(buzzer,785); //primer beep, se prenden 3 leds
       digitalWrite(led1, HIGH);
       digitalWrite(led2, HIGH);
@@ -394,6 +406,19 @@ void readySetGo(void)
 
 void finCompetencia(void)
 {
+
+//tone(buzzer, );
+//Creo que aca hace algo prendiendo las matrices
+//delay();
+//noTone(buzzer);
+//delay(3000);
+//apagarMatrizroja();
+//apagarMatrizAmarilla();
+//apagarMatrizVerde();
+  
+  
+  /*
+
   tone(buzzer,1570);
   digitalWrite(led1, HIGH);
   digitalWrite(led2, HIGH);
@@ -408,6 +433,8 @@ void finCompetencia(void)
   noTone(buzzer);
   delay(3000);
   ledsReset();
+
+*/
 }
 
 char toChar(int num)

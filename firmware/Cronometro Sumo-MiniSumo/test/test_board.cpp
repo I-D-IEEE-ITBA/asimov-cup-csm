@@ -41,7 +41,6 @@ LedControl  display8digits = LedControl(DIN, CLK, CS, 1); //Din = 12, Clck = 10,
  * STATIC VARIABLES AND CONST VARIABLES WITH FILE LEVEL SCOPE
  ******************************************************************************/
 
-
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -70,8 +69,14 @@ void setup() {
 }
 
 void loop(){
+
+
+
+
+
+
     timeNow = millis();
-    if (timeNow-timePrev > 1000){
+    if (timeNow-timePrev > 2000){
         timePrev = timeNow;
         led_prendido = led_prendido ? false : true;
         digitalWrite(LED3, led_prendido ? HIGH : LOW);

@@ -19,7 +19,7 @@ const uint16_t colors[] = {
 void setup() {
   matrix.begin();
   matrix.setTextWrap(false);
-  matrix.setBrightness(1);
+  matrix.setBrightness(60);
   matrix.setTextColor(colors[0]);
 }
 
@@ -41,6 +41,8 @@ int pass = 0;
 void loop() {
   matrix.fillScreen( matrix.Color(255, 255, 255));
   matrix.setCursor(x, 0);
+
+
   //matrix.print(F("Hello Worldy"));//Hello World 
   if(--x < -72) {
     x = matrix.width();

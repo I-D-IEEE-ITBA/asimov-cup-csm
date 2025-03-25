@@ -25,6 +25,10 @@
 #define LED8    7           //pin digital 7
 #define LED9    8           //pin digital 8
 
+//-------------------Pin de Matrices
+#define MATRICES 0
+#define NUM_LEDS 192
+
 //-------------------Buzzer
 #define BUZZER  9           //pin digital pwm
 

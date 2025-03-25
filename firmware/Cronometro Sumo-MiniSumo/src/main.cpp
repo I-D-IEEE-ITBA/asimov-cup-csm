@@ -1,5 +1,6 @@
 #include "LedControl.h"
 #include "board.h"
+#include <FastLED.h>
 
 LedControl display8digits = LedControl(DIN, CLK, CS, N_DISP); //Din = 12, Clck = 10, CS = 11, Number of devices = 1
 //MAX7219 display8digits;
@@ -23,6 +24,9 @@ const int led7      = LED7;
 const int led8      = LED8; //luces que se prenden en secuencia al inicio.
 const int led9      = LED9;
 const int buzzer    = BUZZER; //buzzer
+
+const int matrices = MATRICES;
+CRGB leds[NUM_LEDS];
 
 int buttonRState = 0;
 int buttonRPrevState = 0;
@@ -52,6 +56,7 @@ void ledsReset(void);
 void readySetGo(void);
 void finCompetencia(void);
 char toChar(int num);
+void prenderMatrizRoja(void);
 
 
 
@@ -78,7 +83,9 @@ void setup() {
   pinMode(led8,OUTPUT);
   pinMode(led9,OUTPUT);
 
-  //Serial.begin(9600); //creo que hace falta porque se comunica por spi con el modulo de displays
+  Serial.begin(9600); //creo que hace falta porque se comunica por spi con el modulo de displays
+  FastLED.addLeds<WS2812, matrices, RGB>(leds, NUM_LEDS);
+  FastLED.setBrightness(50);
 }
 
 //---------------------------------------------------------------------//
@@ -361,14 +368,14 @@ Iniciar
 void readySetGo(void)
 {
 	//Secuencia de Iniciar
-    //tone(buzzer, );
-	  //prenderMatrizRoja();
-    //delay(500);
-	  //prenderMatrizAmarilla();
-    //delay(500);
-	  //prenderMatrizVerde();
-    //delay(5000); 
-    //tone(buzzer, );
+    tone(buzzer, 785);
+	  prenderMatrizRoja();
+    delay(500);
+	  prenderMatrizAmarilla();
+    delay(500);
+	  prenderMatrizVerde();
+    delay(5000); 
+    tone(buzzer, 785);
 
 
 /*
@@ -440,4 +447,34 @@ void finCompetencia(void)
 char toChar(int num)
 {
   return num+'0';
+}
+
+void prenderMatrizRoja(void){
+
+  for(int i = 0; i < 64; i++){
+    leds[i].setRGB(255,0,0);
+  }
+
+  FastLED.show();
+
+}
+
+void prenderMatrizAmarilla(void){
+
+  for(int i = 64; i < 128; i++){
+    leds[i].setRGB(255,255,0);
+  }
+
+  FastLED.show();
+
+}
+
+void prenderMatrizVerde(void){
+
+  for(int i = 128; i < 192; i++){
+    leds[i].setRGB(0,255,0);
+  }
+
+  FastLED.show();
+
 }

@@ -57,6 +57,12 @@ void readySetGo(void);
 void finCompetencia(void);
 char toChar(int num);
 void prenderMatrizRoja(void);
+void prenderMatrizAmarilla(void);
+void prenderMatrizVerde(void);
+void apagarMatrizRoja(void)
+void apagarMatrizAmarilla(void)
+void apagarMatrizVerde(void)
+
 
 
 
@@ -414,14 +420,13 @@ void readySetGo(void)
 void finCompetencia(void)
 {
 
-//tone(buzzer, );
-//Creo que aca hace algo prendiendo las matrices
-//delay();
-//noTone(buzzer);
-//delay(3000);
-//apagarMatrizroja();
-//apagarMatrizAmarilla();
-//apagarMatrizVerde();
+tone(buzzer, 1570);
+delay();
+noTone(buzzer);
+delay(3000);
+apagarMatrizroja();
+apagarMatrizAmarilla();
+apagarMatrizVerde();
   
   
   /*
@@ -456,7 +461,6 @@ void prenderMatrizRoja(void){
   }
 
   FastLED.show();
-
 }
 
 void prenderMatrizAmarilla(void){
@@ -466,7 +470,6 @@ void prenderMatrizAmarilla(void){
   }
 
   FastLED.show();
-
 }
 
 void prenderMatrizVerde(void){
@@ -476,5 +479,32 @@ void prenderMatrizVerde(void){
   }
 
   FastLED.show();
+}
 
+
+void apagarMatrizRoja(void){
+
+  for(int i = 0; i < 64; i++){
+    leds[i].setRGB(0,0,0);
+  }
+
+  FastLED.show();
+}
+
+void apagarMatrizAmarilla(void){
+
+  for(int i = 64; i < 128; i++){
+    leds[i].setRGB(0,0,0);
+  }
+
+  FastLED.show();
+}
+
+void apagarMatrizVerde(void){
+
+  for(int i = 128; i < 192; i++){
+    leds[i].setRGB(0,0,0);
+  }
+
+  FastLED.show();  
 }

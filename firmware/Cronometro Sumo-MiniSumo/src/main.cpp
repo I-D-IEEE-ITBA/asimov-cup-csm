@@ -62,6 +62,8 @@ unsigned long timer1Init = 0; //Timer de tiempo de pelea (cuenta hasta 3 min).
                               //minutos y segundos. Activado, pausado y reseteado con boton rojo.
 unsigned long timer2Init = 0; //Timer de tiempo de infraccion (cuenta hasta 15 seg).
                               //segundos y centesimas de segundo. Activado, pausado y reseteado con boton amarillo.
+unsigned long timerPausa = 0; //Timer de tiempo de pausa (cuenta tiempo de pausa).
+                              
 
 
 

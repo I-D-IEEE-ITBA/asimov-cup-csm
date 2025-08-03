@@ -26,21 +26,31 @@
 #define LED9    8           //pin digital 8
 
 //-------------------Pin de Matrices
-#define MATRICES 0
+#define MATRICES 6
 #define NUM_LEDS 192
 
 //-------------------Buzzer
 #define BUZZER  9           //pin digital pwm
 
 //-------------------Modulo Display
+#define SDA 18
+#define SCL 19
+
 #define DIN     10          //pin digital
 #define CS      11          //pin digital
 #define CLK     12          //pin digital
 #define N_DISP  1
 
 //-------------------Buttons
+#define BUTTON_1  14
+#define BUTTON_2  15
+#define BUTTON_3  16
+
 #define BUTTON_Y  18          //pin digital 18  A4
 #define BUTTON_R  19          //pin digital 19  A5
+
+//------------------DCF
+#define DCF 5
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS

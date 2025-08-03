@@ -43,7 +43,7 @@ void loop() {
   matrix.setCursor(x, 0);
 
 
-  //matrix.print(F("Hello Worldy"));//Hello World 
+  matrix.print(F("Hello Worldy"));//Hello World 
   if(--x < -72) {
     x = matrix.width();
     if(++pass >= 3) pass = 0;

@@ -1,6 +1,8 @@
 #include "LedControl.h"
 #include "board.h"
-#include <FastLED.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_NeoMatrix.h>
+#include <Adafruit_NeoPixel.h>
 
 LedControl display8digits = LedControl(DIN, CLK, CS, N_DISP); //Din = 12, Clck = 10, CS = 11, Number of devices = 1
 //MAX7219 display8digits;
@@ -28,7 +30,17 @@ const int led9      = LED9;
 const int buzzer    = BUZZER; //buzzer
 
 const int matrices = MATRICES;
-CRGB leds[NUM_LEDS];
+// CRGB leds[NUM_LEDS];
+
+const uint16_t colors[] = {
+  matrix.Color(255, 0, 0), matrix.Color(255, 255, 0), matrix.Color(0, 255, 0) };
+
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(24, 8, matrices,
+  NEO_MATRIX_TOP     + NEO_MATRIX_RIGHT +
+  NEO_MATRIX_COLUMNS + NEO_MATRIX_PROGRESSIVE,
+  NEO_RGB            + NEO_KHZ800);
+
+  
 
 int button1State = 0;
 int button1PrevState = 0;
@@ -43,23 +55,29 @@ unsigned long timeNow = 0;
 unsigned long timePrev = 0;
   unsigned long delaytime=250;
 
-
+  
+unsigned long timer0Init = 0; //Timer de tiempo para acomodar (cuenta hasta 30 seg).
+                              //minutos y segundos. Activado, pausado y reseteado con boton Rojo.
 unsigned long timer1Init = 0; //Timer de tiempo de pelea (cuenta hasta 3 min).
                               //minutos y segundos. Activado, pausado y reseteado con boton rojo.
 unsigned long timer2Init = 0; //Timer de tiempo de infraccion (cuenta hasta 15 seg).
                               //segundos y centesimas de segundo. Activado, pausado y reseteado con boton amarillo.
 
+
+
 int estado1 = 0; //0: presionar boton rojo para comenzar. 1: contando. 2: pausado, presionar boton rojo para volver a estado 0.
 int estado2 = 0; //0: presionar boton amarillo para comenzar a contar. 1: contando.
+int estado3 = 0; //0: presionar boton verde para comenzar a contar. 1: contando. 
 
 int flagStart = 0;
 int matriz1 = 0;
-int matriz2 = 64;
-int matriz3 = 128;
+int matriz2 = 8;
+int matriz3 = 16;
+int primeros5 = 0;
 
 //function prototypes
 void writeTimer1(unsigned long timerInit);
-void writeTimer2(unsigned long timerInit);
+void writeTimer2(unsigned long timerInit, bool on, int duracion);
 void writeTimerReset(int timer_id);
 void irPrendiendoLeds(unsigned long timer1Init);
 void ledsReset(void);
@@ -68,7 +86,7 @@ void finCompetencia(void);
 char toChar(int num);
 void prenderMatriz(int matriz, int r, int g, int b);
 void apagarMatriz(int matriz);
-
+bool showDigit(int digit, int startIdx, CRGB color);
 
 
 
@@ -97,8 +115,11 @@ void setup() {
   pinMode(led9,OUTPUT);
 
   Serial.begin(9600); //creo que hace falta porque se comunica por spi con el modulo de displays
-  FastLED.addLeds<WS2812, matrices, RGB>(leds, NUM_LEDS);
-  FastLED.setBrightness(50);
+
+  matrix.begin();
+  matrix.setTextWrap(false);
+  matrix.setBrightness(60);
+  matrix.setTextColor(colors[0]);
 }
 
 //---------------------------------------------------------------------//
@@ -154,10 +175,10 @@ void loop() {
     if (button1Pressed) //boton rojo presionado
 	//----------------------------comenzar--------------------------------------//
     {
+      timer0Init = millis();
+      estado1 = 3; 
       button1Pressed = 0;
-      readySetGo(); //hace 3 beeps cortos y 1 largo, y prende los leds de a 3.
-      estado1=1; //pasa a 'contando'
-      timer1Init = millis();
+      
     }
 	//Elegir Apoyaron-Iniciar
 	//se ejecuta una 
@@ -172,6 +193,18 @@ void loop() {
   else if (estado1==1) //timer 1: contando
   {
 
+    if(primeros5){
+      if((millis()-timer2Init)/1000 >= 5){
+        primeros5 = 0;
+      }
+    }
+    else{
+          tone(buzzer, 785, 1000);
+          apagarMatriz(matriz1);
+          apagarMatriz(matriz2);
+          apagarMatriz(matriz3);
+    }
+
     writeTimer1(timer1Init); //imprime tiempo de pelea
 
     //irPrendiendoLeds(timer1Init); //prende leds a medida que pasa el tiempo de pelea.
@@ -182,6 +215,9 @@ void loop() {
     if (estado2==0){ //presionar boton amarillo para comenzar
 	//No enganchados
       writeTimerReset(2);
+      apagarMatriz(matriz1);
+      apagarMatriz(matriz2);
+      apagarMatriz(matriz3);
       if (button2Pressed) //boton amarillo presionado
       {
         button2Pressed = 0;
@@ -192,7 +228,7 @@ void loop() {
     else if (estado2==1) //timer 2: contando
     {
 	//enganchados
-      writeTimer2(timer2Init);
+      writeTimer2(timer2Init, 1, 15);
       if (button2Pressed) //boton amarillo presionado
       {
 		//Desenganchas - sigue normal
@@ -202,7 +238,7 @@ void loop() {
       else if ((millis()-timer2Init)/1000 >= TIEMPO_INFRACCION_SEGS) //pasaron mas de 15 seg
       {
 		//Infraccion 15 segundos
-        writeTimer2(timer2Init); //para que imprima el 15, y no un posible 14.99
+        writeTimer2(timer2Init, 0, 0); //para que imprima el 15, y no un posible 14.99
         estado1=2; //pasa a 'pausado'
         
 		//Reanudar 
@@ -231,12 +267,30 @@ void loop() {
   //----------------------------estado 2--------------------------------------//
   else if (estado1==2) //timer 1: pausado
   {
-    if (button1Pressed) //boton rojo presionado
+    if (button3Pressed) //boton verde presionado
     {
-      button1Pressed = 0;
+      button3Pressed = 0;
+      button1Pressed = 1;
       estado1=0; //pasa a 'presionar para comenzar'
     }
   }
+
+  //------------------------estado 3--------------------------------------//
+  else if (estado1==3){
+
+    if((millis()-timer0Init)/1000 >= 30 || button1Pressed){
+      readySetGo(); //hace 3 beeps cortos y 1 largo, y prende los leds de a 3.
+      estado1=1; //pasa a 'contando'
+      primeros5 = 1;
+      button1Pressed = 0;
+      timer1Init = millis();
+    } 
+    else{
+      writeTimer2(timer0Init, 0, 0);
+    }
+  
+  }
+
 }
 
 //---------------------------------------------------------------------//
@@ -274,16 +328,34 @@ void writeTimer1(unsigned long timerInit)
 
 //---------------------------------------------------------------------//
 
-void writeTimer2(unsigned long timerInit)
+void writeTimer2(unsigned long timerInit, bool on, int duracion)
 { //Esrcibe segs (digitos 3 y 2 del display) y centisegs (digitos 1 y 0) del tiempo de infraccion
   unsigned long timer2Centiseg = (millis()-timerInit)/10;
   int segs = timer2Centiseg/100;
-  int centisegs = timer2Centiseg - 100*segs;
+  if(on){
+    segs = duracion - segs;
+  }
+  
+  //int centisegs = timer2Centiseg - 100*segs;
 
-  display8digits.setDigit(0, 3, (byte)(segs/10), FALSE);
-  display8digits.setDigit(0, 2, (byte)(segs - (segs/10)*10), TRUE);
-  display8digits.setDigit(0, 1, (byte)(centisegs/10), FALSE);
-  display8digits.setDigit(0, 0, (byte)(centisegs - (centisegs/10)*10), FALSE);
+  int primerDigito = segs/10;
+  int segundoDigito = segs - (segs/10)*10;
+
+  matrix.setCursor(0, 0);
+  matrix.print(':');
+
+  matrix.setCursor(8, 0);
+  matrix.print(primerDigito + '0');
+
+  matrix.setCursor(16, 0);
+  matrix.print(segundoDigito+'0');
+
+  matrix.show();
+
+  // display8digits.setDigit(0, 3, (byte)(segs/10), FALSE);
+  // display8digits.setDigit(0, 2, (byte)(segs - (segs/10)*10), TRUE);
+  // display8digits.setDigit(0, 1, (byte)(centisegs/10), FALSE);
+  // display8digits.setDigit(0, 0, (byte)(centisegs - (centisegs/10)*10), FALSE);
 
   
   //display8digits.DisplayChar(3, toChar(segs/10), FALSE); //imprime por ej: 04.59 (4segs, 59centisegs)
@@ -399,7 +471,7 @@ Iniciar
 void readySetGo(void)
 {
 	//Secuencia de Iniciar
-    tone(buzzer, 785);
+    tone(buzzer, 785, 1000);
 	  prenderMatriz(matriz1, 255, 0, 0);
     delay(1000);
     apagarMatriz(matriz1);
@@ -408,12 +480,9 @@ void readySetGo(void)
     apagarMatriz(matriz2);
 	  prenderMatriz(matriz1, 0, 255, 0);
     prenderMatriz(matriz2, 0, 255, 0);
-    prenderMatriz(matriz3, 0, 255, 0);
-    delay(5000); 
-    tone(buzzer, 785);
-    apagarMatriz(matriz1);
-    apagarMatriz(matriz2);
-    apagarMatriz(matriz3);
+    prenderMatriz(matriz3, 0, 255, 0);  
+
+
 
 
 /*
@@ -452,13 +521,12 @@ void readySetGo(void)
 void finCompetencia(void)
 {
 
-tone(buzzer, 1570);
-delay(1000);
-noTone(buzzer);
+tone(buzzer, 1570, 1000);
 delay(3000);
 apagarMatriz(matriz1);
 apagarMatriz(matriz2);
 apagarMatriz(matriz3);
+
 
 flagStart = 0; 
   
@@ -490,20 +558,12 @@ char toChar(int num)
 
 void prenderMatriz(int matriz, int r, int g, int b){
 
-  for(int i = matriz; i < matriz + 64; i++){
-    leds[i].setRGB(r,g,b);
-  }
-
-  FastLED.show();
+  matrix.fillRect(matriz, 0, 8, 8, matrix.Color(r, g, b));
 }
 
 
 void apagarMatriz(int matriz){
 
-  for(int i = matriz; i < matriz + 64; i++){
-    leds[i].setRGB(0,0,0);
-  }
-
-  FastLED.show();
+  matrix.fillRect(matriz, 0, 8, 8, matrix.Color(0, 0, 0));
 }
 

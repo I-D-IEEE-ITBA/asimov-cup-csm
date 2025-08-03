@@ -27,7 +27,9 @@
 
 //-------------------Pin de Matrices
 #define MATRICES 6
-#define NUM_LEDS 192
+#define WIDTH 24
+#define HEIGHT 8
+#define NUM_LEDS (WIDTH * HEIGHT)
 
 //-------------------Buzzer
 #define BUZZER  9           //pin digital pwm

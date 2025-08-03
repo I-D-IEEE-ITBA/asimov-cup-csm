@@ -269,11 +269,14 @@ void loop() {
   //----------------------------estado 2--------------------------------------//
   else if (estado1==2) //timer 1: pausado
   {
+    timerPausa = millis();
     if (button3Pressed) //boton verde presionado
     {
       button3Pressed = 0;
       button1Pressed = 1;
       estado1=0; //pasa a 'presionar para comenzar'
+      timer1Init = timer1Init + (millis() - timerPausa); //agrega el tiempo de pausa al timer1Init
+      timer2Init = timer2Init + (millis() - timerPausa); // agrega el tiempo de pausa al timer2Init
     }
   }
 

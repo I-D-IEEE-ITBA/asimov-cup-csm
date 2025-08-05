@@ -1,5 +1,7 @@
 #include "LedControl.h"
 #include "board.h"
+#include "../lib/segments/segments.h"
+#include <FastLED.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
@@ -11,6 +13,8 @@ LedControl display8digits = LedControl(DIN, CLK, CS, N_DISP); //Din = 12, Clck =
 
 #define TIEMPO_COMPETENCIA_SEGS 180
 #define TIEMPO_INFRACCION_SEGS 15
+
+#define DEFAULT_BRIGHTNESS 100 // Default brightness for the display
 
 //CONEXIONES IMPORTANTES: para el display, para Arduino Uno: VCC a +5V, GND a GND, DIN a pin 12, CS a pin 11, CLK a pin 10
 
@@ -30,17 +34,21 @@ const int led9      = LED9;
 const int buzzer    = BUZZER; //buzzer
 
 const int matrices = MATRICES;
-// CRGB leds[NUM_LEDS];
 
-const uint16_t colors[] = {
-  matrix.Color(255, 0, 0), matrix.Color(255, 255, 0), matrix.Color(0, 255, 0) };
+// Display Contador de Futbol DCF
+CRGB leds[NUM_LEDS];
+DisplayManager displayManager(leds);
+
+
+
 
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(24, 8, matrices,
   NEO_MATRIX_TOP     + NEO_MATRIX_RIGHT +
   NEO_MATRIX_COLUMNS + NEO_MATRIX_PROGRESSIVE,
   NEO_RGB            + NEO_KHZ800);
 
-  
+const uint16_t colors[] = {
+  matrix.Color(255, 0, 0), matrix.Color(255, 255, 0), matrix.Color(0, 255, 0) };
 
 int button1State = 0;
 int button1PrevState = 0;
@@ -80,7 +88,8 @@ int primeros5 = 0;
 //function prototypes
 void writeTimer1(unsigned long timerInit);
 void writeTimer2(unsigned long timerInit, bool on, int duracion);
-void writeTimerReset(int timer_id);
+//void writeTimerReset(int timer_id);
+void writeTimerReset(void);
 void irPrendiendoLeds(unsigned long timer1Init);
 void ledsReset(void);
 void readySetGo(void);
@@ -117,6 +126,11 @@ void setup() {
   pinMode(led9,OUTPUT);
 
   Serial.begin(9600); //creo que hace falta porque se comunica por spi con el modulo de displays
+
+  // Initialize LED strip and display system
+  FastLED.addLeds<WS2812B, PIN_RGB_DATA, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  displayManager.initialize(DEFAULT_BRIGHTNESS);
+
 
   matrix.begin();
   matrix.setTextWrap(false);
@@ -161,8 +175,11 @@ void loop() {
   {
     // Aca iria un flag para no reiniciar timers
     if (!flagStart) {
-      writeTimerReset(1); //imprime ceros en el primer timer.
-      writeTimerReset(2); //imprime ceros en el segundo timer.
+      writeTimerReset(); //imprime ceros en el primer timer del DCF.
+      //writeTimerReset(2); //imprime ceros en el segundo timer.
+      apagarMatriz(matriz1);
+      apagarMatriz(matriz2);
+      apagarMatriz(matriz3);
       flagStart = 1;
     }
     
@@ -216,7 +233,7 @@ void loop() {
     //Logica del boton 2 y timer 2
     if (estado2==0){ //presionar boton amarillo para comenzar
 	//No enganchados
-      writeTimerReset(2);
+      //writeTimerReset(2);
       apagarMatriz(matriz1);
       apagarMatriz(matriz2);
       apagarMatriz(matriz3);
@@ -317,11 +334,11 @@ void writeTimer1(unsigned long timerInit)
     noTone(buzzer);
   }
 
-
-  display8digits.setDigit(0, 7, (byte)(mins), TRUE); //imprime por ej: 2.47 (2mins, 47seg)
-  display8digits.setDigit(0, 6, (byte)(segs/10), FALSE);
-  display8digits.setDigit(0, 5, (byte)(segs - (segs/10)*10), FALSE);
-  display8digits.setDigit(0, 4, (byte)(centisegs/10), FALSE);
+  displayManager.updateDisplays(mins, segs);
+  //display8digits.setDigit(0, 7, (byte)(mins), TRUE); //imprime por ej: 2.47 (2mins, 47seg)
+  //display8digits.setDigit(0, 6, (byte)(segs/10), FALSE);
+  //display8digits.setDigit(0, 5, (byte)(segs - (segs/10)*10), FALSE);
+  //display8digits.setDigit(0, 4, (byte)(centisegs/10), FALSE);
 
 
 
@@ -401,7 +418,7 @@ void writeTimer2(unsigned long timerInit, bool on, int duracion)
 // }
 
 void writeTimerReset(void){  // Escribir ceros en el display contador football
-
+  displayManager.updateDisplays(0, 0); // Resetea ambos displays a 00
 }
 
 //---------------------------------------------------------------------//

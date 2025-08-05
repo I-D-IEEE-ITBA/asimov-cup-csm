@@ -26,10 +26,11 @@
 #define LED9    8           //pin digital 8
 
 //-------------------Pin de Matrices
-#define MATRICES 6
-#define WIDTH 24
-#define HEIGHT 8
-#define NUM_LEDS (WIDTH * HEIGHT)
+#define MATRICES  6
+//#define WIDTH     24  //no se usan
+//#define HEIGHT    8   //no se usan
+//#define NUM_LEDS (WIDTH * HEIGHT) // no se usan, segments.h define NUM_LEDS
+#define PIN_RGB_DATA 6  // Pin para los datos de la tira LED RGB
 
 //-------------------Buzzer
 #define BUZZER  9           //pin digital pwm
@@ -44,9 +45,9 @@
 #define N_DISP  1
 
 //-------------------Buttons
-#define BUTTON_1  14
-#define BUTTON_2  15
-#define BUTTON_3  16
+#define BUTTON_1  A0        // Pin analógico A0 (pin 14)
+#define BUTTON_2  A1        // Pin analógico A1 (pin 15) 
+#define BUTTON_3  A2        // Pin analógico A2 (pin 16)
 
 #define BUTTON_Y  18          //pin digital 18  A4
 #define BUTTON_R  19          //pin digital 19  A5

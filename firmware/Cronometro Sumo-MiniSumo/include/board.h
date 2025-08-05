@@ -30,7 +30,7 @@
 //#define WIDTH     24  //no se usan
 //#define HEIGHT    8   //no se usan
 //#define NUM_LEDS (WIDTH * HEIGHT) // no se usan, segments.h define NUM_LEDS
-#define PIN_RGB_DATA 6  // Pin para los datos de la tira LED RGB
+#define PIN_RGB_DATA 5  // Pin para los datos de la tira LED RGB
 
 //-------------------Buzzer
 #define BUZZER  9           //pin digital pwm

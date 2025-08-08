@@ -1,12 +1,12 @@
-#include "LedControl.h"
 #include "board.h"
 #include "../lib/segments/segments.h"
 #include <FastLED.h>
+#include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 //LedControl display8digits = LedControl(DIN, CLK, CS, N_DISP); //Din = 12, Clck = 10, CS = 11, Number of devices = 1
 //MAX7219 display8digits;
@@ -24,24 +24,14 @@
 const int button1   = BUTTON_1; //boton rojo arranca el cronometro de la pelea
 const int button2   = BUTTON_2; //boton amarillo
 const int button3   = BUTTON_3; //boton amarillo
-const int led1      = LED1; //luces que se prenden en secuencia al inicio.
-const int led2      = LED2; //luces que se prenden en secuencia al inicio.
-const int led3      = LED3; //conectar, del modulo del transistor: hembra marron a gnd, hembra rojo a 5v arduino (ver esquematico,
-const int led4      = LED4; //muesquita para arriba). Despues, pin 1 modulo transistores a 2 leds, pin 2 a 1 led, pin 3 a 1 led,
-const int led5      = LED5; //pin 4 a 2 leds, pin 5 a 2 leds, pin 6 a 1 led.
-const int led6      = LED6; //luces que se prenden en secuencia al inicio.
-const int led7      = LED7;
-const int led8      = LED8; //luces que se prenden en secuencia al inicio.
-const int led9      = LED9;
 const int buzzer    = BUZZER; //buzzer
 
-const int matrices = MATRICES;
 
 // Display Contador de Futbol DCF
 CRGB leds[NUM_LEDS];
 DisplayManager displayManager(leds);
 
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(24, 8, matrices,
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(24, 8, 6,
   NEO_MATRIX_TOP     + NEO_MATRIX_RIGHT +
   NEO_MATRIX_COLUMNS + NEO_MATRIX_PROGRESSIVE,
   NEO_RGB            + NEO_KHZ800);
@@ -62,7 +52,7 @@ unsigned long timeNow = 0;
 unsigned long timePrev = 0;
 unsigned long delaytime=250;
 
-  
+
 unsigned long timer0Init = 0; //Timer de tiempo para acomodar (cuenta hasta 30 seg).
                               //minutos y segundos. Activado, pausado y reseteado con boton Rojo.
 unsigned long timer1Init = 0; //Timer de tiempo de pelea (cuenta hasta 3 min).
@@ -75,7 +65,7 @@ unsigned long timer5Init = 0; //Timer de tiempo de inicio de 5seg.
 
 int estado1 = 0; //0: presionar boton rojo para comenzar. 1: contando. 2: pausado, presionar boton rojo para volver a estado 0.
 int estado2 = 0; //0: presionar boton amarillo para comenzar a contar. 1: contando.
-int estado3 = 0; //0: presionar boton verde para comenzar a contar. 1: contando. 
+int estado3 = 0; //0: presionar boton verde para comenzar a contar. 1: contando.
 
 int flagStart = 0;
 int matriz1 = 0;
@@ -96,7 +86,7 @@ void finCompetencia(void);
 char toChar(int num);
 void prenderMatriz(int matriz, int r, int g, int b);
 void apagarMatriz(int matriz);
-bool showDigit(int digit, int startIdx, CRGB color);
+//bool showDigit(int digit, int startIdx, CRGB color);
 
 
 //---------------------------------------------------------------------//
@@ -109,20 +99,20 @@ void setup() {
   display8digits.clearDisplay(0);
 
 */
-  
-  pinMode(button1, INPUT_PULLUP); //botones: activo bajo (presionado: 0)
-  pinMode(button2, INPUT_PULLUP);
-  pinMode(button3, INPUT_PULLUP);
-  pinMode(buzzer,OUTPUT); //buzzer y leds: activo alto (se prenden/activan con un 1)
-  pinMode(led1,OUTPUT);
-  pinMode(led2,OUTPUT);
-  pinMode(led3,OUTPUT);
-  pinMode(led4,OUTPUT);
-  pinMode(led5,OUTPUT);
-  pinMode(led6,OUTPUT);
-  pinMode(led7,OUTPUT);
-  pinMode(led8,OUTPUT);
-  pinMode(led9,OUTPUT);
+
+  // pinMode(button1, INPUT_PULLUP); //botones: activo bajo (presionado: 0)
+  // pinMode(button2, INPUT_PULLUP);
+  // pinMode(button3, INPUT_PULLUP);
+  // pinMode(buzzer,OUTPUT); //buzzer y leds: activo alto (se prenden/activan con un 1)
+  // pinMode(led1,OUTPUT);
+  // pinMode(led2,OUTPUT);
+  // pinMode(led3,OUTPUT);
+  // pinMode(led4,OUTPUT);
+  // pinMode(led5,OUTPUT);
+  // pinMode(led6,OUTPUT);
+  // pinMode(led7,OUTPUT);
+  // pinMode(led8,OUTPUT);
+  // pinMode(led9,OUTPUT);
 
   Serial.begin(9600); //creo que hace falta porque se comunica por spi con el modulo de displays
 
@@ -134,8 +124,10 @@ void setup() {
   matrix.begin();
   matrix.setTextWrap(false);
   matrix.setBrightness(60);
-  matrix.setTextColor(colors[0]);
+  matrix.setTextColor(colors[2]);
 }
+
+int x    = matrix.width();
 
 //---------------------------------------------------------------------//
 //---------------------------------------------------------------------//
@@ -166,13 +158,13 @@ void loop() {
       button3Pressed=1;
     }
   }
-  
+
 
   //----------------------------estado 0--------------------------------------//
   //-------------------estado de reposo-sin comenzar--------------------------//
   if (estado1==0) //presionar boton rojo para comenzar
   {
-    // Aca iria un flag para no reiniciar timers  
+    // Aca iria un flag para no reiniciar timers
     if(flagInEstado0){
       Serial.println("Entro a estado 0. Apago Matrices");
       apagarMatriz(matriz1);
@@ -183,21 +175,21 @@ void loop() {
         writeTimerReset(); //resetea el flag para que no se vuelva a ejecutar la secuencia de semaforo
       }
       flagInEstado0 = 0;
-    }  
-    
+    }
+
     estado2 = 0; //timer 2 en estado 'presionar boton amarillo para comenzar' (solo puede comenazar cuando estado1=1, 'contando').
     button2Pressed = 0;
 
     if (button1Pressed) //boton rojo presionado
 	//----------------------------comenzar--------------------------------------//
     {
-      estado1 = 3; 
-      button1Pressed = 0; 
+      estado1 = 3;
+      button1Pressed = 0;
       timer0Init = millis();
       flagInEstado0 = 1;
     }
 	//Elegir Apoyaron-Iniciar
-	//se ejecuta una 
+	//se ejecuta una
 //----------|----------|
 
 
@@ -219,15 +211,15 @@ void loop() {
       }
     }
     else{
-      //si se pone aca apagar matriz, se ejecuta siempre que hayan pasado los 5 segundos     
+      //si se pone aca apagar matriz, se ejecuta siempre que hayan pasado los 5 segundos
     }
 
     writeTimer1(timer1Init); //imprime tiempo de pelea
 
   //irPrendiendoLeds(timer1Init); //prende leds a medida que pasa el tiempo de pelea.
-	//semaforo 
+	//semaforo
 
-	//Pelea - robots enganchados - 
+	//Pelea - robots enganchados -
     //Logica del boton 2 y timer 2
     if (estado2 == 0){ //presionar boton amarillo para comenzar
 	  //No enganchados
@@ -248,19 +240,19 @@ void loop() {
         apagarMatriz(matriz1);
         apagarMatriz(matriz2);
         apagarMatriz(matriz3);
-      
+
         button2Pressed = 0;
         estado2 = 0; //vuelve a 'presionar para comenzar'
       }
       else if ((millis()-timer2Init)/1000 >= TIEMPO_INFRACCION_SEGS) //pasaron mas de 15 seg
       {
 		  //Infraccion 15 segundos
-        //writeTimer2(timer2Init, 0, 0); //para que imprima el 15, y no un posible 14.99
+        writeTimer2(timer2Init, 1, 15); //para que imprima el 15, y no un posible 14.99
         estado1 = 2; //pasa a 'pausado'
         timerPausa = millis();
-		//Reanudar 
+		//Reanudar
 		//con apoyaron o iniciar
-    //Cuando se reanuda debe hacer la secuencia de semaforo nuevamente mas los 
+    //Cuando se reanuda debe hacer la secuencia de semaforo nuevamente mas los
     //5 segundos con las luces verdes encendidas
       }
     }
@@ -271,7 +263,7 @@ void loop() {
       estado1 = 2; //pasa a 'pausado'
       timerPausa = millis();
     }
-	  
+
     //Uno gano el combate
     if (button1Pressed) //boton rojo presionado
     {
@@ -316,14 +308,13 @@ void loop() {
         timer1Init = timer1Init + (millis() - timerPausa); //agrega el tiempo de pausa al timer1Init
       }
       timer5Init = millis(); //inicializa el timer5Init
-      
-    } 
+
+    }
     else{
       writeTimer2(timer0Init, 1, 30);
     }
   }
 }
-
 //---------------------------------------------------------------------//
 //---------------------------------------------------------------------//
 //function definitions
@@ -331,12 +322,15 @@ void loop() {
 void writeTimer1(unsigned long timerInit)
 { //Esrcibe mins (digito 7 del display: leftmost) y segs (digitos 6 y 5) del tiempo de pelea
 
-  unsigned long timer1Seg = (millis()-timerInit)/1000;  
+  unsigned long timer1Seg = (millis()-timerInit)/1000;
   unsigned long timer1Centiseg = (millis()-timerInit)/10;
-  
+
   int mins = timer1Seg/60;
   int segs = timer1Seg - 60*mins;
-  int centisegs = timer1Centiseg - 100*(timer1Centiseg/100);  
+  int centisegs = timer1Centiseg - 100*(timer1Centiseg/100);
+
+  static int segsPrev = 0;
+  static int minsPrev = 0;
 
   if(centisegs > 95)
   {
@@ -351,7 +345,12 @@ void writeTimer1(unsigned long timerInit)
     Serial.println(segs);
   #endif
 
-  displayManager.updateDisplays(mins, segs);
+  if(mins != minsPrev || segs != segsPrev){
+    minsPrev = mins;
+    segsPrev = segs;
+    displayManager.updateDisplays(mins, segs);
+  }
+
   //display8digits.setDigit(0, 7, (byte)(mins), TRUE); //imprime por ej: 2.47 (2mins, 47seg)
   //display8digits.setDigit(0, 6, (byte)(segs/10), FALSE);
   //display8digits.setDigit(0, 5, (byte)(segs - (segs/10)*10), FALSE);
@@ -359,7 +358,7 @@ void writeTimer1(unsigned long timerInit)
 
 
 
-  
+
   //display8digits.DisplayChar(7, toChar(mins), TRUE); //imprime por ej: 2.47 (2mins, 47seg)
   //display8digits.DisplayChar(6, toChar(segs/10), FALSE);
   //display8digits.DisplayChar(5, toChar(segs - (segs/10)*10), FALSE);
@@ -374,22 +373,36 @@ void writeTimer2(unsigned long timerInit, bool on, int duracion)
   if(on){
     segs = duracion - segs;
   }
-  
+
   //int centisegs = timer2Centiseg - 100*segs;
 
   int primerDigito = segs/10;
   int segundoDigito = segs - (segs/10)*10;
+  static int primerDigitoPrev = 0;
+  static int segundoDigitoPrev = 0;
 
-  matrix.setCursor(0, 0);
-  matrix.print(':');
+  if(primerDigito != primerDigitoPrev || segundoDigito != segundoDigitoPrev){
+    apagarMatriz(matriz1);
+    apagarMatriz(matriz2);
+    apagarMatriz(matriz3);
+    primerDigitoPrev = primerDigito;
+    segundoDigitoPrev = segundoDigito;
 
-  matrix.setCursor(8, 0);
-  matrix.print(primerDigito + '0');
+    matrix.setCursor(2, 0);
+    matrix.print(':');
 
-  matrix.setCursor(16, 0);
-  matrix.print(segundoDigito+'0');
+    matrix.setCursor(10, 0);
+    matrix.print(primerDigito);
 
-  matrix.show();
+    matrix.setCursor(18, 0);
+    matrix.print(segundoDigito);
+
+    matrix.show();
+  }
+
+  
+  
+  
   #if DEBUG
     Serial.print("Timer 2: ");
     Serial.print(":");
@@ -404,7 +417,7 @@ void writeTimer2(unsigned long timerInit, bool on, int duracion)
   // display8digits.setDigit(0, 1, (byte)(centisegs/10), FALSE);
   // display8digits.setDigit(0, 0, (byte)(centisegs - (centisegs/10)*10), FALSE);
 
-  
+
   //display8digits.DisplayChar(3, toChar(segs/10), FALSE); //imprime por ej: 04.59 (4segs, 59centisegs)
   //display8digits.DisplayChar(2, toChar(segs - (segs/10)*10), TRUE);
   //display8digits.DisplayChar(1, toChar(centisegs/10), FALSE);
@@ -428,7 +441,7 @@ void writeTimer2(unsigned long timerInit, bool on, int duracion)
 //     i_init=0; //imprime ceros en displays 3-2-1-0
 //     i_end=3;
 //   }
-  
+
 //   for (int i=i_init; i<=i_end; i++){
 //     if(i==7 || i==2){
 //       decimalPoint=TRUE;
@@ -436,14 +449,14 @@ void writeTimer2(unsigned long timerInit, bool on, int duracion)
 //     else{
 //       decimalPoint=FALSE;
 //     }
-    
+
 //     display8digits.setDigit(0, i, (byte)0, decimalPoint);
 //     //display8digits.DisplayChar(i,'0',decimalPoint);
 //   }
 // }
 
 void writeTimerReset(void){  // Escribir ceros en el display contador football
-  displayManager.updateDisplays(0, 0); // Resetea ambos displays a 00
+  //displayManager.updateDisplays(0, 0); // Resetea ambos displays a 00
   #if DEBUG
     Serial.println("Timer 1 Reset");
   #endif
@@ -453,7 +466,7 @@ void writeTimerReset(void){  // Escribir ceros en el display contador football
 /*Apoyaron
 30segundos
 +
-Iniciar 
+Iniciar
 */
 //Iniciar
 void readySetGo(void)
@@ -462,16 +475,19 @@ void readySetGo(void)
     Serial.println("Arranque");
   #endif
 	//Secuencia de Iniciar
+    apagarMatriz(matriz1);
+    apagarMatriz(matriz2);
+    apagarMatriz(matriz3);
     tone(buzzer, 785, 1000);
-	  prenderMatriz(matriz1, 255, 0, 0);
+	  prenderMatriz(matriz1, 0, 255, 0);
     delay(1000);
     apagarMatriz(matriz1);
 	  prenderMatriz(matriz2, 255, 255, 0);
     delay(1000);
     apagarMatriz(matriz2);
-	  prenderMatriz(matriz1, 0, 255, 0);
-    prenderMatriz(matriz2, 0, 255, 0);
-    prenderMatriz(matriz3, 0, 255, 0);  
+	  prenderMatriz(matriz1, 255, 0, 0);
+    prenderMatriz(matriz2, 255, 0, 0);
+    prenderMatriz(matriz3, 255, 0, 0);
 
   #if DEBUG
     Serial.println("Fin de Arranque");
@@ -486,7 +502,7 @@ void readySetGo(void)
       delay (500);
       noTone(buzzer);
       delay(500);
-      
+
       tone(buzzer,785); //segundo beep, se prenden otros 3 leds
       digitalWrite(led4, HIGH);
       digitalWrite(led5, HIGH);
@@ -494,7 +510,7 @@ void readySetGo(void)
       delay (500);
       noTone(buzzer);
       delay(500);
-      
+
       tone(buzzer,785); //tercer beep, se prenden ultimos 3 leds
       digitalWrite(led7, HIGH);
       digitalWrite(led8, HIGH);
@@ -502,7 +518,7 @@ void readySetGo(void)
       delay (500);
       noTone(buzzer);
       delay(1000);
-      
+
       ledsReset();
       tone(buzzer,1570); //cuarto beep, mas largo, se apagan todos los leds
 	  */
@@ -523,9 +539,9 @@ apagarMatriz(matriz2);
 apagarMatriz(matriz3);
 
 
-flagStart = 0; 
-  
-  
+flagStart = 0;
+
+
   /*
 
   tone(buzzer,1570);
@@ -553,49 +569,17 @@ char toChar(int num)
 
 void prenderMatriz(int matriz, int r, int g, int b){
   matrix.fillRect(matriz, 0, 8, 8, matrix.Color(r, g, b));
+  matrix.show();
 }
 
 
 void apagarMatriz(int matriz){
   matrix.fillRect(matriz, 0, 8, 8, matrix.Color(0, 0, 0));
+  matrix.show();
 }
 
 //---------------------------------------------------------------------//
 
-//Algo Visual (agregado)
-void irPrendiendoLeds(unsigned long timer1Init)
-{ //para un tiempo de 180 segs de competencia, prende un par de leds
-  //cada 40 segs, de izquierda a derecha. (El ultimo led se prende con
-  //finCompetencia())
-  unsigned long timer1Seg = (millis()-timer1Init)/1000;
-  if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*8/9){
-    digitalWrite(led8, HIGH);
-  }
-  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*7/9){
-    digitalWrite(led7, HIGH);
-  } 
-  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*6/9){
-    digitalWrite(led6, HIGH);
-  } 
-  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*5/9){
-    digitalWrite(led5, HIGH);
-  } 
-  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*4/9){
-    digitalWrite(led4, HIGH);
-  } 
-  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*3/9){
-    digitalWrite(led3, HIGH);
-  } 
-  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*2/9){
-    digitalWrite(led2, HIGH);
-  } 
-  else if (timer1Seg>=TIEMPO_COMPETENCIA_SEGS*1/9){
-    digitalWrite(led1, HIGH);
-  } 
-
-
-
-}
 
 //---------------------------------------------------------------------//
 
